@@ -74,6 +74,17 @@ Ins and outs of writing Portable Document Files from scratch
 
       ```
    - Streams are most always compressed
+     - `/FlateDecode`
+     - ```
+       796 0 obj
+       <</Length 275 /Filter /FlateDecode>>
+       stream
+       HTKO0÷ü
+       endstream
+       endobj
+       ```
+     - Can use multiple methods like for JPEG compression with:
+         `/Filter [/ASCII85Decode /DCTDecode]`
 
 #### Linking
 
@@ -84,8 +95,23 @@ Ins and outs of writing Portable Document Files from scratch
      /Contents [4 0 R] >>  % Both work!
   ```
   
+### Linearized PDF
 
+PDF 1.2 introduced rules for order of objects and **hint tables**. Useful for HTTP or web viewing of PDFs for faster access.
 
-
-
+A linearization dictionary will appear at the top of the file
+```GhostScript
+%PDF-1.4
+%âãÏÓ
+1 0 obj
+<< /E 200967
+/H [ 667 140 ]
+/L 201431
+/Linearized 1
+/N 1
+/O 7
+/T 201230
+>>
+endobj
+```
 
