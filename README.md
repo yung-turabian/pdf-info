@@ -1,6 +1,94 @@
 # PDF
 Ins and outs of writing Portable Document Files from scratch
 
+## Example (Incomplete, need to write XRef table)
+
+```PostScript
+%PDF-1.0
+%âãÏÓ
+1 0 obj % Page Tree
+<< /Kids [2 0 R 3 0 R]  /Type /Pages /Count 3 >>
+endobj
+4 0 obj % Content stream for page 1
+<< >>
+stream
+1. 0.000000 0.000000 1. 50. 770. cm BT /F0 36. Tf (Page One) Tj ET
+endstream
+endobj
+2 0 obj % Page one
+<<
+  /Rotate 0
+  /Parent 1 0 R
+  /Resources
+    << /Font << /F0 << /BaseFont /ComicSans /Subtype /Type1 /Type /Font >> >> >>
+  /MediaBox [0.000000 0.000000 595.275590551 841.88976378]
+  /Type /Page
+  /Contents [4 0 R]
+>>
+endobj
+5 0 obj % Document catalog
+<< /PageLayout /TwoColumnLeft /Pages 1 0 R /Type /Catalog >>
+endobj
+6 0 obj % Page 3
+<<
+/Rotate 0
+/Parent 3 0 R
+/Resources
+<< /Font << /F0 << /BaseFont /ComicSans /Subtype /Type1 /Type /Font >> >> >>
+/MediaBox [0.000000 0.000000 595.275590551 841.88976378]
+/Type /Page
+/Contents [7 0 R]
+>>
+endobj
+3 0 obj % Intermediate page tree node, linking to pages two and three
+<< /Parent 1 0 R /Kids [8 0 R 6 0 R] /Count 2 /Type /Pages >>
+endobj
+8 0 obj % Page 2
+<<
+/Rotate 270
+/Parent 3 0 R
+/Resources
+<< /Font << /F0 << /BaseFont /Times-Italic /Subtype /Type1 /Type /Font >> >> >>
+/MediaBox [0.000000 0.000000 595.275590551 841.88976378]
+/Type /Page
+/Contents [9 0 R]
+>>
+endobj
+9 0 obj % Content stream for Page 2
+<< >>
+stream
+q 1. 0.000000 0.000000 1. 50. 770. cm BT /F0 36. Tf (Page Two) Tj ET Q
+1. 0.000000 0.000000 1. 50. 750 cm BT /F0 16 Tf ((Rotated by 270 degrees)) Tj ET
+endstream
+endobj
+7 0 obj % Content stream for Page 3
+<< >>
+stream
+1. 0.000000 0.000000 1. 50. 770. cm BT /F0 36. Tf (Page Three) Tj ET
+endstream
+endobj
+10 0 obj % Document information dictionary
+<<
+/Title (Example)
+/Author (yung-turabian)
+/Producer (Manually Created)
+/ModDate (D:2024)
+/CreationDate (D:2024)
+>>
+endobj xref
+0 11
+trailer % Trailer dictionary
+<<
+/Info 10 0 R
+/Root 5 0 R
+/Size 11
+/ID [<xo84a9zefryhsg3b8nta4xz0> <bd1cxyw0n8ga28t1xznt1yuq>]
+>>
+startxref
+0
+%%EOF
+```
+
 ## Basic Structure
 
 ### Header
@@ -115,7 +203,6 @@ endobj
 6 0 obj % Page 3
 << /Type /Page /Parent 3 0 R /MediaBox [0 0 500 500] /Resources << >> >>
 endobj
-endobj
 ```
 
 ```PostScript
@@ -154,6 +241,10 @@ For a root or intermediate page node...
 2. Strings, `(Hello World)`, must be enclosed in brackets.
     - Can escape both ( ) & \ by using \, like in (\(Hello) -> "Hello"
     - Basic escape sequences work too, `\n \r \t \b \f \ddd`
+    a. Text strings are strings outside the actual textual content (bookmark names, etc.), encoded using either PDFDocEncoding or Unicode
+    b. Date strings, the PDF date format is (D:YYYYMMDDHHmmSSOHH'mm')
+      - 2024 .. 06 .. 04 .. 15 .. 14 .. 03 .. - .. 04' .. 00'
+      - (D:2024) is also valid
 4. Names, `/Name`, keys for dictionares and denoted with a /
     - / by itself even counts as a name!
     - No spaces allowed, but use #20 and it will appear that way if needed
