@@ -115,5 +115,5 @@ PDF 1.2 introduced rules for order of objects and **hint tables**. Useful for HT
 endobj
 ```
 
-- `pdfopt` comes with GhostScript[https://www.ghostscript.com/] will linearlize a file.
+- `pdfopt` comes with (GhostScript)[https://www.ghostscript.com/] will linearlize a file.
 
