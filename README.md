@@ -3,15 +3,16 @@ Ins and outs of writing Portable Document Files from scratch
 
 ## Basic Structure
 
-- Header
+### Header
   - %PDF-1.0 -> %PDF-1.7
   - Include on 2-line: %âãÏÓ, for transfer of text over FTP or other legacy file transfer programs. Doesn't have to be that but bytes w/ character code higher than 127.
  
-- Body
+### Body
   - Open an object with `1 0 obj << ... >> endobj`
 - Cross-reference table
   - Lists byte offsets for each object, is what allows dynamic loading
-  - ```PostScript
+
+    ```PostScript
     0 6                  % Six entries in table, starting at 0
     0000000000 65535 f   % Special entry
     0000000015 00000 n   % Object 1 is at byte offset 15
@@ -20,18 +21,125 @@ Ins and outs of writing Portable Document Files from scratch
     0000000291 00000 n
     0000000409 00000 n   % Object 5 is at byte offset 409
     ```
-- Trailer
-  - ```PostScript
-    trailer              % begin of Trailer
-    <<
-    /Root 5 0 R          % Points to catalog
-    /Size 6              % Number of objects
-    >>
-    startxref
-    459                  % Byte offset of xref table
-    %%EOF                % End-of-file marker
-    ```
+### Trailer
 
+#### Examples
+
+```PostScript
+trailer              % begin of Trailer
+<<
+/Root 5 0 R          % Points to catalog
+/Size 6              % Number of objects
+>>
+startxref
+459                  % Byte offset of xref table
+%%EOF                % End-of-file marker
+```
+
+```PostScript
+trailer
+<<
+  /Root 126 0 R
+  /Size 200 0 R
+  /Info 198 0 R
+  /ID [<isyx0rh79lpn9q9ud9qzai3y> <xn3ucvxpqg2rt5s2bkrsqstd>]
+>>
+```
+
+#### Details
+
+- /Size (required) : `Integer` total number of entries in xref table (almost always number of objects plus 1)
+- /Root (required) : `Indirect reference to dictionary` indirect reference to *catalog*
+- /Info : `Indirect reference to dictionary` indirect reference to *information dictionary*
+- /ID : `Array of 2 strings` unique identity. First string if decidied when the file is created, the second is modified by system when modifying the file
+
+### Information Dictionary
+
+### Examples
+```PostScript
+<<
+  /ModDate (D:
+  /CreationDate (D:
+  /Title (blahblah)
+  /Creator (XXX)
+  /Producer (XXX)
+  /Author (yung-turabian)
+>>
+```
+
+#### Details
+Metadata:
+- /Title : Document title, string
+- /Subject : Subject of document, string
+- /Keywords : keywords associated with document, no structure of note, string
+- /Author : Name of author, string
+- /CreationDate : Date the document was created, date string
+- /ModDate : Date of last modification, date string
+- /Creator : Name of program that created this document, string
+- /Producer : Name of program which converted file to PDF, string
+
+### Catalog
+
+#### Details
+- /Type (required) : must be /Catalog, name
+- /Pages (required) : root node of page tree, indirect reference to dictionary
+- /PageLabels : A number tree giving the page labels, more complicated number like i,ii,iii, number tree
+- /Names : the name dictionary, contains name trees, mapping to entities to drop the need to use object numbers to reference dirctly, dictionary
+- /Dests : `dictionary` dictionary maps names to destinations, a dest being a hyperlink
+- /ViewerPreferences : `dictionary` allows for flags to specify certain behavior
+- /PageLayout : `name` Specify the page layout.
+  - /SinglePage (default), /OneColumn, /TwoColumnLeft, /TwoColumRight, /TwoPageLeft, /TwoPageRight
+- /PageMode : `name` specify page mode to be used by viewers
+  - /UseNone (default), /UseOutlines, /UseThumbs, /Fullscreen, /UseOC, /UseAttachments
+- /Outlines : `indirect reference to dictionary` outline dictionary, i.e. bookmarks
+- /Metadata : `indirect reference to dictionary` document's XMP metadata
+
+### Pages and Page Trees
+
+```PostScript
+1 0 obj % The root
+<< /Type /Pages /Kids [2 0 R 3 0 R 4 0 R] /Count 7 >>
+endobj
+2 0 obj % Intermediate node
+<< /Type /Pages /Kids [5 0 R] /Parent 1 0 R /Count 3 >>
+endobj
+3 0 obj % Intermediate node
+<< /Type /Pages /Kids [6 0 R] /Parent 1 0 R /Count 3 >>
+endobj
+4 0 obj % Page 1
+<< /Type /Page /Parent 1 0 R /MediaBox [0 0 500 500] /Resources << >> >>
+endobj
+5 0 obj % Page 2
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 500 500] /Resources << >> >>
+endobj
+6 0 obj % Page 3
+<< /Type /Page /Parent 3 0 R /MediaBox [0 0 500 500] /Resources << >> >>
+endobj
+endobj
+```
+
+```PostScript
+/MediaBox [0 0 600 900] % rectangle type; x,y coords, lower-left to upper-right
+```
+
+#### Details
+
+Pages are linked with a page tree, it is good practice to create a balanced tree. Nodes with no children are the pages.
+
+For a page...
+- /Type (required) : `name` must be /Page
+- /Parent (required) : `indirect reference to dictionary` parent node of this node
+- /Resources : `dictionary` page's resources (fonts, images, etc.), if empty resources are inheirted from parent node
+- /Contents : `indirect reference to stream or array of streams` graphical content of the page, if empty the page is empty
+- /Rotate : `integer` viewing rotation of page in degress, multiple of 90
+- /MediaBox (required) : `rectangle` page's media box, page size most often. If missing inherited from parent node in page tree
+- /CropBox : `rectangle` defines visible region of page, is missing same space as media box
+
+For a root or intermediate page node...
+- /Type (required) : `name` must be /Pages
+- /Kids (required) : `array of indirect references` immediate child page-tree nodes
+- /Count (requirec) : `integer` number of page nodes that are children
+- /Parent : `indirect reference to page tree node` reference to parent of this node, if not present this is now the root node
 
 ## Lexicon
 
@@ -58,7 +166,8 @@ Ins and outs of writing Portable Document Files from scratch
     - Must all be of same type
 3. Dictionaries, `<< /Contents 1 0 R /Resources 2 0 R >>`
 4. Streams, hold binary data and work with a dictionary defining attributes of data, used to store fonts and images and other writables.
-    - ```PostScript
+
+     ```PostScript
       8 0 obj
       <<
       /Length 65
@@ -72,9 +181,11 @@ Ins and outs of writing Portable Document Files from scratch
       endstream
       endobj
       ```
+     
    - Streams are most always compressed
      - `/FlateDecode`
-     - ```PostScript
+
+       ```PostScript
        796 0 obj
        <</Length 275 /Filter /FlateDecode>>
        stream
@@ -82,6 +193,7 @@ Ins and outs of writing Portable Document Files from scratch
        endstream
        endobj
        ```
+       
      - Can use multiple methods like for JPEG compression with:
          `/Filter [/ASCII85Decode /DCTDecode]`
 
@@ -89,7 +201,8 @@ Ins and outs of writing Portable Document Files from scratch
 
 - Indirect reference, forms a link from one object to another, `1 0 R`
     - Tha example is object number 1, generation umber 0, R is the indirect refernece keyword
-- ```PostScript
+
+  ```PostScript
   << /Resources 10 0 R
      /Contents [4 0 R] >>  % Both work!
   ```
@@ -115,5 +228,37 @@ PDF 1.2 introduced rules for order of objects and **hint tables**. Useful for HT
 endobj
 ```
 
-- `pdfopt` comes with (GhostScript)[https://www.ghostscript.com/] will linearlize a file.
+- `pdfopt` comes with [GhostScript👻](https://www.ghostscript.com/) will linearlize a file.
+
+```bash
+$ pdfopt in.pdf out.pdf
+```
+
+### Order PDF file is read
+
+1. Reads header and version number to confirm this is, in fact, a PDF
+2. EOF is now by found by reversing the stream to the end of the file. Trailer dictionary is now read, the byte offset of the xref table is read.
+3. The xref table is now read, revealing locations of all objects in the file.
+4. All objects can now be parsed, or can wait until needed, on demand.
+5. Extracting date: pages, graphics, and metadata.
+
+A PDF object as a data structure could look like, for example:
+
+```PostScript
+<< /Kids [2 0 R] /Count 1 /Type /Pages >>
+```
+
+```Python
+dict = {
+  "/Kids": [2],
+  "/Count": 1,
+  "/Type": "/Pages"
+}
+```
+
+A structure would need bools, ints, reals(floats), string, names(strings), array(output as "[1 1 1 1]"), dictionary(string, pdfobject), stream(pdfobject, bytes), indirect(a reference as in [2 0 R], just the 2).
+
+### 
+
+
 
