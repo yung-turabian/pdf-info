@@ -89,13 +89,15 @@ startxref
 %%EOF
 ```
 
-## Basic Structure
+## Basic Structure of a PDF
 
 ### Header
+---
   - %PDF-1.0 -> %PDF-1.7
   - Include on 2-line: %âãÏÓ, for transfer of text over FTP or other legacy file transfer programs. Doesn't have to be that but bytes w/ character code higher than 127.
  
 ### Body
+---
   - Open an object with `1 0 obj << ... >> endobj`
 - Cross-reference table
   - Lists byte offsets for each object, is what allows dynamic loading
@@ -110,6 +112,7 @@ startxref
     0000000409 00000 n   % Object 5 is at byte offset 409
     ```
 ### Trailer
+---
 
 #### Examples
 
@@ -142,6 +145,7 @@ trailer
 - /ID : `Array of 2 strings` unique identity. First string if decidied when the file is created, the second is modified by system when modifying the file
 
 ### Information Dictionary
+---
 
 ### Examples
 ```PostScript
@@ -167,6 +171,7 @@ Metadata:
 - /Producer : Name of program which converted file to PDF, string
 
 ### Catalog
+---
 
 #### Details
 - /Type (required) : must be /Catalog, name
