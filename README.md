@@ -58,7 +58,7 @@ Ins and outs of writing Portable Document Files from scratch
     - Must all be of same type
 3. Dictionaries, `<< /Contents 1 0 R /Resources 2 0 R >>`
 4. Streams, hold binary data and work with a dictionary defining attributes of data, used to store fonts and images and other writables.
-    - ```
+    - ```PostScript
       8 0 obj
       <<
       /Length 65
@@ -71,11 +71,10 @@ Ins and outs of writing Portable Document Files from scratch
       ET
       endstream
       endobj
-
       ```
    - Streams are most always compressed
      - `/FlateDecode`
-     - ```
+     - ```PostScript
        796 0 obj
        <</Length 275 /Filter /FlateDecode>>
        stream
@@ -90,7 +89,7 @@ Ins and outs of writing Portable Document Files from scratch
 
 - Indirect reference, forms a link from one object to another, `1 0 R`
     - Tha example is object number 1, generation umber 0, R is the indirect refernece keyword
-- ```
+- ```PostScript
   << /Resources 10 0 R
      /Contents [4 0 R] >>  % Both work!
   ```
@@ -99,8 +98,9 @@ Ins and outs of writing Portable Document Files from scratch
 
 PDF 1.2 introduced rules for order of objects and **hint tables**. Useful for HTTP or web viewing of PDFs for faster access.
 
-A linearization dictionary will appear at the top of the file
-```GhostScript
+- A linearization dictionary will appear at the top of the file
+
+```PostScript
 %PDF-1.4
 %âãÏÓ
 1 0 obj
@@ -114,4 +114,6 @@ A linearization dictionary will appear at the top of the file
 >>
 endobj
 ```
+
+- `pdfopt` comes with GhostScript[https://www.ghostscript.com/] will linearlize a file.
 
